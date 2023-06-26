@@ -6,6 +6,7 @@ import { Radio } from './components/Radio';
 function App() {
   const [highlightColor, setHighlightColor] = useState('green');
   const [ranges, setRanges] = useState([]);
+  const [dataState, setDataState] = useState([]);
   let { current: selection } = useRef(null);
   const container = useRef(null);
 
@@ -35,37 +36,42 @@ function App() {
       span.dataset.highlightId = id;
 
       const regex = new RegExp(
-        `.+(?=<span.*?data-highlight-id="${id}".*?>.+<\/span>)`
+        `.+(?=<span.*?data-highlight-id="${id}".*?>.+</span>)`
       );
+
+      const content = container.current.innerHTML
+        .replaceAll('<br>', '\n')
+        .match(regex);
 
       switch (span.style.backgroundColor) {
         case 'green':
           data.like.push({
             content: span.textContent,
-            offsetFromStart: container.current.innerHTML
-              .replaceAll('<br>', '\n')
-              .replace()
-              .replace(/<[^>]+>/g, '')
-              .indexOf(container.current.match(regex)[0]),
+            offsetFromStart: content
+              ? content[0].replace(/<[^>]+>/g, '').length
+              : 0,
           });
           break;
         case 'red':
-          data.dislike.push(span.textContent);
+          data.dislike.push({
+            content: span.textContent,
+            offsetFromStart: content
+              ? content[0].replace(/<[^>]+>/g, '').length
+              : 0,
+          });
           break;
         case 'yellow':
-          data.doNotUnderstand.push(span.textContent);
+          data.doNotUnderstand.push({
+            content: span.textContent,
+            offsetFromStart: content
+              ? content[0].replace(/<[^>]+>/g, '').length
+              : 0,
+          });
           break;
       }
     });
 
-    console.log(
-      container.current.innerHTML
-        .replaceAll('<br>', '\n')
-        .replace(/<[^>]+>/g, ''),
-      container.current.innerHTML
-    );
-
-    console.log(data);
+    setDataState(data);
   };
 
   const handleHighlight = () => {
@@ -79,22 +85,6 @@ function App() {
     document.designMode = 'on';
 
     if (range) {
-      console.log(
-        JSON.stringify(
-          {
-            hAnchorOffset: selection.anchorOffset,
-            hFocusOffset: selection.focusOffset,
-            hRangeCount: selection.rangeCount,
-            rStartOffset: range.startOffset,
-            rEndOffset: range.endOffset,
-          },
-          null,
-          2
-        )
-      );
-
-      // selection.removeAllRanges();
-      // highlighted.addRange(range);
       setRanges((current) => [...current, range]);
     }
 
@@ -125,6 +115,7 @@ function App() {
             'Technology has transformed the way we live, work, and communicate. From the invention of the wheel to the creation of the internet, each new innovation has revolutionized society and opened up new possibilities. We now have the power to connect with people on the other side of the world in an instant, access a wealth of information at our fingertips, and even explore virtual realms through immersive virtual reality experiences.<br>Technology has transformed the way we live, work, and communicate. From the invention of the wheel to the creation of the internet, each new innovation has revolutionized society and opened up new possibilities. We now have the power to connect with people on the other side of the world in an instant, access a wealth of information at our fingertips, and even explore virtual realms through immersive virtual reality experiences.<br>Technology has transformed the way we live, work, and communicate. From the invention of the wheel to the creation of the internet, each new innovation has revolutionized society and opened up new possibilities. We now have the power to connect with people on the other side of the world in an instant, access a wealth of information at our fingertips, and even explore virtual realms through immersive virtual reality experiences.<br>Technology has transformed the way we live, work, and communicate. From the invention of the wheel to the creation of the internet, each new innovation has revolutionized society and opened up new possibilities. We now have the power to connect with people on the other side of the world in an instant, access a wealth of information at our fingertips, and even explore virtual realms through immersive virtual reality experiences.<br><br>Technology has transformed the way we live, work, and communicate. From the invention of the wheel to the creation of the internet, each new innovation has revolutionized society and opened up new possibilities. We now have the power to connect with people on the other side of the world in an instant, access a wealth of information at our fingertips, and even explore virtual realms through immersive virtual reality experiences.<br>Technology has transformed the way we live, work, and communicate. From the invention of the wheel to the creation of the internet, each new innovation has revolutionized society and opened up new possibilities. We now have the power to connect with people on the other side of the world in an instant, access a wealth of information at our fingertips, and even explore virtual realms through immersive virtual reality experiences.<br>Technology has transformed the way we live, work, and communicate. From the invention of the wheel to the creation of the internet, each new innovation has revolutionized society and opened up new possibilities. We now have the power to connect with people on the other side of the world in an instant, access a wealth of information at our fingertips, and even explore virtual realms through immersive virtual reality experiences.<br>Technology has transformed the way we live, work, and communicate. From the invention of the wheel to the creation of the internet, each new innovation has revolutionized society and opened up new possibilities. We now have the power to connect with people on the other side of the world in an instant, access a wealth of information at our fingertips, and even explore virtual realms through immersive virtual reality experiences.<br><br>',
         }}
       ></div>
+      <pre>{JSON.stringify(dataState, null, 2)}</pre>
     </form>
   );
 }
