@@ -1,12 +1,29 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import generateRandomId from './utils/generateRandomId';
 import './App.css';
 import { Radio } from './components/Radio';
 
 function App() {
   const [highlightColor, setHighlightColor] = useState('green');
+  const [ranges, setRanges] = useState([]);
+  let { current: selection } = useRef(null);
   const container = useRef(null);
 
-  const _ = () => {
+  useEffect(() => {
+    if (!selection) return;
+
+    selection.removeAllRanges();
+
+    ranges.forEach((range) => {
+      selection.addRange(range);
+    });
+
+    return () => {
+      selection.removeAllRanges();
+    };
+  }, [ranges, selection]);
+
+  const getData = () => {
     if (!container.current) return;
 
     const highlighted = [...container.current.getElementsByTagName('span')];
@@ -14,43 +31,77 @@ function App() {
     const data = { like: [], dislike: [], doNotUnderstand: [] };
 
     highlighted.forEach((span) => {
+      const id = generateRandomId();
+      span.dataset.highlightId = id;
+
+      const regex = new RegExp(
+        `.+(?=<span.*?data-highlight-id="${id}".*?>.+<\/span>)`
+      );
+
       switch (span.style.backgroundColor) {
         case 'green':
-          data.like.push(span.textContent);
-          return;
+          data.like.push({
+            content: span.textContent,
+            offsetFromStart: container.current.innerHTML
+              .replaceAll('<br>', '\n')
+              .replace()
+              .replace(/<[^>]+>/g, '')
+              .indexOf(container.current.match(regex)[0]),
+          });
+          break;
         case 'red':
           data.dislike.push(span.textContent);
-          return;
+          break;
         case 'yellow':
           data.doNotUnderstand.push(span.textContent);
-          return;
+          break;
       }
     });
+
+    console.log(
+      container.current.innerHTML
+        .replaceAll('<br>', '\n')
+        .replace(/<[^>]+>/g, ''),
+      container.current.innerHTML
+    );
 
     console.log(data);
   };
 
   const handleHighlight = () => {
-    const highlighted = window.getSelection();
-    if (!highlighted.toString().replace(/\s/g, '')) return;
+    selection = window.getSelection();
 
-    const range = highlighted.getRangeAt(0);
+    if (!selection) return;
+    if (!selection.toString().replace(/\s/g, '')) return;
+
+    const range = selection.getRangeAt(0);
 
     document.designMode = 'on';
 
     if (range) {
-      console.log(highlighted.anchorOffset, range.startOffset, range.endOffset);
+      console.log(
+        JSON.stringify(
+          {
+            hAnchorOffset: selection.anchorOffset,
+            hFocusOffset: selection.focusOffset,
+            hRangeCount: selection.rangeCount,
+            rStartOffset: range.startOffset,
+            rEndOffset: range.endOffset,
+          },
+          null,
+          2
+        )
+      );
 
-      console.log(highlighted.anchorOffset);
-
-      highlighted.removeAllRanges();
-      highlighted.addRange(range);
+      // selection.removeAllRanges();
+      // highlighted.addRange(range);
+      setRanges((current) => [...current, range]);
     }
 
     document.execCommand('backColor', false, highlightColor);
     document.designMode = 'off';
 
-    _();
+    getData();
 
     window.getSelection().removeAllRanges();
   };
