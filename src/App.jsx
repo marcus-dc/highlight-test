@@ -64,6 +64,7 @@ function App() {
         );
       }
 
+      // Start of stop word validation
       const splittedPhrase = span.textContent.split(" ");
 
       if (
